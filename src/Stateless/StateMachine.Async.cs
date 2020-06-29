@@ -144,12 +144,12 @@ namespace Stateless
             {
                 _firing = true;
 
-                await InternalFireOneAsync(trigger, args).ConfigureAwait(false);
+                await InternalFireOneAsync(trigger, args);
 
                 while (_eventQueue.Count != 0)
                 {
                     var queuedEvent = _eventQueue.Dequeue();
-                    await InternalFireOneAsync(queuedEvent.Trigger, queuedEvent.Args).ConfigureAwait(false);
+                    await InternalFireOneAsync(queuedEvent.Trigger, queuedEvent.Args);
                 }
             }
             finally
@@ -169,7 +169,7 @@ namespace Stateless
             // Try to find a trigger handler, either in the current state or a super state.
             if (!representativeState.TryFindHandler(trigger, args, out var result))
             {
-                await _unhandledTriggerAction.ExecuteAsync(representativeState.UnderlyingState, trigger, result?.UnmetGuardConditions).ConfigureAwait(false);
+                await _unhandledTriggerAction.ExecuteAsync(representativeState.UnderlyingState, trigger, result?.UnmetGuardConditions);
                 return;
             }
             // Check if this trigger should be ignored
@@ -203,7 +203,7 @@ namespace Stateless
             {
                 var transition = new Transition(source, destination, trigger, args);
 
-                transition = await representativeState.ExitAsync(transition).ConfigureAwait(false);
+                transition = await representativeState.ExitAsync(transition);
 
                 State = transition.Destination;
                 var newRepresentation = GetRepresentation(transition.Destination);
@@ -236,7 +236,7 @@ namespace Stateless
             {
                 var transition = new Transition(source, destination, trigger, args);
 
-                await CurrentRepresentation.InternalActionAsync(transition, args).ConfigureAwait(false);
+                await CurrentRepresentation.InternalActionAsync(transition, args);
             }
         }
 

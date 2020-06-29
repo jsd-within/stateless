@@ -27,7 +27,7 @@ namespace Stateless
                 _onTransitioned?.Invoke(transition);
 
                 foreach (var callback in _onTransitionedAsync)
-                    await callback(transition).ConfigureAwait(false);
+                    await callback(transition);
             }
 #endif
 
