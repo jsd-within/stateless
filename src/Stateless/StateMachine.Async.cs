@@ -197,6 +197,8 @@ namespace Stateless
                 await _onTransitionedEvent.InvokeAsync(new Transition(source, handler.Destination, trigger, args));
 
                 await newRepresentation.EnterAsync(transition, args);
+
+                await _onTransitionCompletedEvent.InvokeAsync(new Transition(source, handler.Destination, trigger, args));
             }
             // Check if it is an internal transition, or a transition from one state to another.
             else if (result.Handler.ResultsInTransitionFrom(source, args, out var destination))
@@ -227,10 +229,16 @@ namespace Stateless
                     {
                         var initialTransition = new InitialTransition(source, newRepresentation.InitialTransitionTarget, trigger, args);
                         newRepresentation = GetRepresentation(newRepresentation.InitialTransitionTarget);
+
+                        // Alert all listeners of initial state transition
+                        await _onTransitionedEvent.InvokeAsync(new Transition(transition.Destination, initialTransition.Destination, transition.Trigger, transition.Parameters));
+
                         await newRepresentation.EnterAsync(initialTransition, args);
                         State = newRepresentation.UnderlyingState;
                     }
                 }
+
+                await _onTransitionCompletedEvent.InvokeAsync(new Transition(transition.Source, State, transition.Trigger, transition.Parameters));
             }
             else
             {
@@ -272,6 +280,19 @@ namespace Stateless
         {
             if (onTransitionAction == null) throw new ArgumentNullException(nameof(onTransitionAction));
             _onTransitionedEvent.Register(onTransitionAction);
+        }
+
+        /// <summary>
+        /// Registers a callback that will be invoked every time the statemachine
+        /// transitions from one state into another and all the OnEntryFrom etc methods
+        /// have been invoked
+        /// </summary>
+        /// <param name="onTransitionAction">The asynchronous action to execute, accepting the details
+        /// of the transition.</param>
+        public void OnTransitionCompletedAsync(Func<Transition, Task> onTransitionAction)
+        {
+            if (onTransitionAction == null) throw new ArgumentNullException(nameof(onTransitionAction));
+            _onTransitionCompletedEvent.Register(onTransitionAction);
         }
     }
 }
